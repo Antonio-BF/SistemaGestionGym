@@ -1,0 +1,94 @@
+<div class="page-header">
+    <div>
+        <h1>Usuarios</h1>
+        <p class="muted">Gestión de socios, personal y administradores.</p>
+    </div>
+    @if (esAdmin()) {
+    <app-button (click)="nuevo()"><app-icon name="plus" [size]="16" /> Nuevo usuario</app-button>
+    }
+</div>
+
+<div class="card">
+    <div class="toolbar">
+        <div class="search">
+            <app-icon name="search" [size]="16" />
+            <input #q class="input" placeholder="Buscar por nombre o email" (input)="onBuscar(q.value)" />
+        </div>
+        @if (esAdmin()) {
+        <select #rol class="select" (change)="onRol(rol.value)">
+            <option value="">Todos los roles</option>
+            @for (r of roles(); track r.id) { <option [value]="r.id">{{ r.nombre }}</option> }
+        </select>
+        }
+        <select #est class="select" (change)="onEstado(est.value)">
+            <option value="">Todos los estados</option>
+            @for (e of estados; track e.value) { <option [value]="e.value">{{ e.label }}</option> }
+        </select>
+    </div>
+
+    @if (loading() && !pagina()) {
+    <div class="center"><app-spinner [size]="30" /></div>
+    } @else if (pagina(); as p) {
+    @if (p.contenido.length === 0) {
+    <div class="empty">No se encontraron usuarios con los filtros aplicados.</div>
+    } @else {
+    <div class="table-wrap" [style.opacity]="loading() ? 0.6 : 1">
+        <table class="table table--stack">
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Rol</th>
+                    <th>Teléfono</th>
+                    <th>Estado</th>
+                    <th>Último acceso</th>
+                    @if (esAdmin()) { <th>Acciones</th> }
+                </tr>
+            </thead>
+            <tbody>
+                @for (u of p.contenido; track u.id) {
+                <tr>
+                    <td data-label="Usuario">
+                        <div class="user-cell">
+                            <span class="avatar">{{ u.nombre | iniciales: u.apellido }}</span>
+                            <div><strong>{{ u.nombre }} {{ u.apellido }}</strong><small>{{ u.email }}</small></div>
+                        </div>
+                    </td>
+                    <td data-label="Rol"><app-badge tone="blue">{{ u.rol }}</app-badge></td>
+                    <td data-label="Teléfono">{{ u.telefono || '—' }}</td>
+                    <td data-label="Estado">
+                        <app-badge [tone]="u.estado === 'ACTIVO' ? 'green' : 'gray'">{{ u.estado }}</app-badge>
+                    </td>
+                    <td data-label="Último acceso">{{ (u.fechaUltimoAcceso | date: 'dd/MM/yyyy HH:mm') ?? '—' }}</td>
+                    @if (esAdmin()) {
+                    <td class="actions">
+                        <button class="btn btn--ghost btn--icon" title="Editar" (click)="editar(u)"><app-icon
+                                name="edit" /></button>
+                        @if (u.id !== miId()) {
+                        <button class="btn btn--ghost btn--icon"
+                            [title]="u.estado === 'ACTIVO' ? 'Desactivar' : 'Activar'" (click)="alternarEstado(u)">
+                            <app-icon name="power" />
+                        </button>
+                        }
+                    </td>
+                    }
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <app-pagination [page]="p.pagina" [totalPages]="p.totalPaginas" [total]="p.totalElementos" [size]="pageSize"
+        (pageChange)="irAPagina($event)" />
+    }
+    }
+</div>
+
+@if (formAbierto()) {
+<app-user-form [usuario]="editando()" [roles]="roles()" (saved)="alGuardar()" (closed)="cerrarForm()" />
+}
+
+@if (porDesactivar(); as u) {
+<app-confirm-dialog title="Desactivar usuario"
+    [message]="'¿Desactivar a ' + u.nombre + ' ' + u.apellido + '? No podrá iniciar sesión hasta que se reactive.'"
+    confirmText="Desactivar" danger [loading]="cambiando()" (confirmed)="confirmarDesactivar()"
+    (cancelled)="porDesactivar.set(null)" />
+}

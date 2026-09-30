@@ -1,0 +1,63 @@
+<div class="page-header">
+    <div>
+        <h1>Roles</h1>
+        <p class="muted">Los roles definen los permisos de acceso. El nombre se guarda en mayúsculas.</p>
+    </div>
+</div>
+
+<div class="grid-2">
+    <div class="card">
+        <div class="card__header">
+            <h2>Nuevo rol</h2>
+        </div>
+        <form class="card__body" [formGroup]="form" (ngSubmit)="crear()" novalidate>
+            <app-form-field label="Nombre del rol" [required]="true" [control]="form.controls.nombre">
+                <input class="input" formControlName="nombre" placeholder="Ej. NUTRICIONISTA" />
+            </app-form-field>
+            <app-button type="submit" [loading]="guardando()"><app-icon name="plus" [size]="16" /> Crear
+                rol</app-button>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="card__header">
+            <h2>Roles registrados</h2>
+        </div>
+        @if (loading()) {
+        <div class="center"><app-spinner [size]="28" /></div>
+        } @else if (roles().length === 0) {
+        <div class="empty">No hay roles registrados.</div>
+        } @else {
+        <div class="table-wrap">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (r of roles(); track r.id) {
+                    <tr>
+                        <td>{{ r.id }}</td>
+                        <td><strong>{{ r.nombre }}</strong></td>
+                        <td class="actions">
+                            <button class="btn btn--ghost btn--icon" title="Eliminar"
+                                (click)="porEliminar.set(r)"><app-icon name="trash" /></button>
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        }
+    </div>
+</div>
+
+@if (porEliminar(); as r) {
+<app-confirm-dialog title="Eliminar rol"
+    [message]="'¿Eliminar el rol ' + r.nombre + '? Solo es posible si no tiene usuarios asociados.'"
+    confirmText="Eliminar" danger [loading]="eliminando()" (confirmed)="eliminar()"
+    (cancelled)="porEliminar.set(null)" />
+}

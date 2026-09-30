@@ -1,0 +1,90 @@
+# =================================================================
+# GLOBAL / SYSTEM (Raíz del repositorio)
+# =================================================================
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+
+# =================================================================
+# FRONTEND: FrontendGym (Angular)
+# =================================================================
+/FrontendGym/dist
+/FrontendGym/tmp
+/FrontendGym/out-tsc
+/FrontendGym/bazel-out
+
+# Node y dependencias
+/FrontendGym/node_modules
+/FrontendGym/npm-debug.log
+/FrontendGym/yarn-error.log
+
+# IDEs y editores
+/FrontendGym/.project
+/FrontendGym/.classpath
+/FrontendGym/.c9/
+/FrontendGym/*.launch
+/FrontendGym/.settings/
+/FrontendGym/*.sublime-workspace
+
+# Visual Studio Code específico para el Frontend
+/FrontendGym/.vscode/*
+!/FrontendGym/.vscode/settings.json
+!/FrontendGym/.vscode/tasks.json
+!/FrontendGym/.vscode/launch.json
+!/FrontendGym/.vscode/extensions.json
+!/FrontendGym/.vscode/mcp.json
+/FrontendGym/.history/*
+
+# Misceláneos / Angular CLI cache
+/FrontendGym/.angular/cache
+/FrontendGym/.sass-cache/
+/FrontendGym/connect.lock
+/FrontendGym/coverage
+/FrontendGym/libpeerconnection.log
+/FrontendGym/testem.log
+/FrontendGym/typings
+/FrontendGym/__screenshots__/
+
+
+# =================================================================
+# BACKEND: SistemaGestionGym (Spring Boot)
+# =================================================================
+/SistemaGestionGym/HELP.md
+/SistemaGestionGym/target/
+/SistemaGestionGym/.mvn/wrapper/maven-wrapper.jar
+!/SistemaGestionGym/**/src/main/**/target/
+!/SistemaGestionGym/**/src/test/**/target/
+
+# STS (Spring Tool Suite)
+/SistemaGestionGym/.apt_generated
+/SistemaGestionGym/.classpath
+/SistemaGestionGym/.factorypath
+/SistemaGestionGym/.project
+/SistemaGestionGym/.settings
+/SistemaGestionGym/.springBeans
+/SistemaGestionGym/.sts4-cache
+
+# IntelliJ IDEA
+/SistemaGestionGym/.idea
+/SistemaGestionGym/*.iws
+/SistemaGestionGym/*.iml
+/SistemaGestionGym/*.ipr
+
+# NetBeans
+/SistemaGestionGym/nbproject/private/
+/SistemaGestionGym/nbbuild/
+/SistemaGestionGym/dist/
+/SistemaGestionGym/nbdist/
+/SistemaGestionGym/.nb-gradle/
+/SistemaGestionGym/build/
+!/SistemaGestionGym/**/src/main/**/build/
+!/SistemaGestionGym/**/src/test/**/build/
+
+# VS Code para Backend
+/SistemaGestionGym/.vscode/
