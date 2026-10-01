@@ -1,15 +1,19 @@
-import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { ValidatorFn } from '@angular/forms';
 
-/** Equivale a @Past del backend. */
-export const fechaPasada: ValidatorFn = (c: AbstractControl): ValidationErrors | null => {
-  if (!c.value) return null;
-  const hoy = new Date().toISOString().slice(0, 10);
-  return c.value < hoy ? null : { fechaFutura: true };
-};
+/** Fecha local YYYY-MM-DD. (toISOString() devuelve UTC y falla después de las 19:00 en Lima.) */
+export function hoyISO(): string {
+  const d = new Date();
+  const dos = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())}`;
+}
+
+/** Equivale a @Past del backend (hoy NO es pasado). */
+export const fechaPasada: ValidatorFn = (control) =>
+  !control.value || control.value < hoyISO() ? null : { fechaFutura: true };
 
 export function coincideCon(otroCampo: string): ValidatorFn {
-  return (c: AbstractControl): ValidationErrors | null => {
-    const otro = c.parent?.get(otroCampo);
-    return otro && c.value !== otro.value ? { noCoincide: true } : null;
+  return (control) => {
+    const otro = control.parent?.get(otroCampo);
+    return otro && control.value !== otro.value ? { noCoincide: true } : null;
   };
 }

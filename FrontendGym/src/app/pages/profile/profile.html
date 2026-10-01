@@ -1,79 +1,73 @@
-<div class="page-header">
-    <div>
-        <h1>Mi perfil</h1>
-        <p class="muted">Administra tu información personal y tu contraseña.</p>
-    </div>
-</div>
+<app-page-header title="Mi perfil" subtitle="Administra tu información personal y tu contraseña." />
 
-@if (loading()) {
-<div class="center"><app-spinner [size]="30" /></div>
-} @else if (perfil(); as p) {
-<div class="card card__body summary">
-    <span class="avatar avatar--lg">{{ p.nombre | iniciales: p.apellido }}</span>
-    <div>
-        <h2>{{ p.nombre }} {{ p.apellido }}</h2>
-        <p class="muted">{{ p.email }}</p>
-        <div class="chips">
-            <app-badge tone="blue">{{ p.rol }}</app-badge>
-            <app-badge [tone]="p.estado === 'ACTIVO' ? 'green' : 'gray'">{{ p.estado }}</app-badge>
-        </div>
-    </div>
-    <div class="meta muted">
-        <small>Miembro desde {{ p.fechaRegistro | date: 'dd/MM/yyyy' }}</small>
-        <small>Último acceso: {{ (p.fechaUltimoAcceso | date: 'dd/MM/yyyy HH:mm') ?? '—' }}</small>
-    </div>
-</div>
-
-<div class="grid-2">
-    <div class="card">
-        <div class="card__header">
-            <h2>Datos personales</h2>
-        </div>
-        <form class="card__body" [formGroup]="formPerfil" (ngSubmit)="guardarPerfil()" novalidate>
-            <div class="form-grid">
-                <app-form-field label="Nombre" [required]="true" [control]="formPerfil.controls.nombre">
-                    <input class="input" formControlName="nombre" />
-                </app-form-field>
-                <app-form-field label="Apellido" [required]="true" [control]="formPerfil.controls.apellido">
-                    <input class="input" formControlName="apellido" />
-                </app-form-field>
-                <app-form-field label="Teléfono" [control]="formPerfil.controls.telefono"
-                    mensajePatron="Debe tener entre 7 y 15 dígitos">
-                    <input class="input" formControlName="telefono" inputmode="tel" />
-                </app-form-field>
-                <app-form-field label="Fecha de nacimiento" [control]="formPerfil.controls.fechaNacimiento">
-                    <input class="input" type="date" formControlName="fechaNacimiento" />
-                </app-form-field>
-                <app-form-field class="full" label="Género" [control]="formPerfil.controls.genero">
-                    <select class="select" formControlName="genero">
-                        @for (g of generos; track g.value) { <option [value]="g.value">{{ g.label }}</option> }
-                    </select>
-                </app-form-field>
+<app-list-state [loading]="loading()" [error]="loadError()" [empty]="perfil() === null" (retry)="cargar()">
+    @if (perfil(); as p) {
+    <div class="card card__body summary">
+        <app-avatar size="lg" [nombre]="p.nombre" [apellido]="p.apellido" />
+        <div>
+            <h2>{{ p.nombre }} {{ p.apellido }}</h2>
+            <p class="muted">{{ p.email }}</p>
+            <div class="chips">
+                <app-badge tone="blue">{{ p.rol }}</app-badge>
+                <app-badge [tone]="estadoTone[p.estado]">{{ p.estado }}</app-badge>
             </div>
-            <app-button type="submit" [loading]="guardandoPerfil()" [disabled]="formPerfil.pristine">Guardar
-                cambios</app-button>
-        </form>
+        </div>
+        <div class="meta muted">
+            <small>Miembro desde {{ p.fechaRegistro | date: 'dd/MM/yyyy' }}</small>
+            <small>Último acceso: {{ (p.fechaUltimoAcceso | date: 'dd/MM/yyyy HH:mm') ?? '—' }}</small>
+        </div>
     </div>
 
-    <div class="card">
-        <div class="card__header">
-            <h2>Cambiar contraseña</h2>
+    <div class="grid-2">
+        <div class="card">
+            <div class="card__header">
+                <h2>Datos personales</h2>
+            </div>
+            <form class="card__body" [formGroup]="formPerfil" (ngSubmit)="guardarPerfil()" novalidate>
+                <div class="form-grid">
+                    <app-form-field label="Nombre">
+                        <input class="input" formControlName="nombre" />
+                    </app-form-field>
+                    <app-form-field label="Apellido">
+                        <input class="input" formControlName="apellido" />
+                    </app-form-field>
+                    <app-form-field label="Teléfono" [patternMessage]="msgTelefono">
+                        <input class="input" formControlName="telefono" inputmode="tel" />
+                    </app-form-field>
+                    <app-form-field label="Fecha de nacimiento">
+                        <input class="input" type="date" formControlName="fechaNacimiento" />
+                    </app-form-field>
+                    <app-form-field class="full" label="Género">
+                        <select class="select" formControlName="genero">
+                            @for (g of generos; track g.value) { <option [value]="g.value">{{ g.label }}</option> }
+                        </select>
+                    </app-form-field>
+                </div>
+                <button appButton type="submit" [loading]="guardandoPerfil()" [disabled]="formPerfil.pristine">
+                    Guardar cambios
+                </button>
+            </form>
         </div>
-        <form class="card__body" [formGroup]="formPass" (ngSubmit)="cambiarPassword()" novalidate>
-            @if (errorPass()) { <div class="alert alert--error" role="alert">{{ errorPass() }}</div> }
-            <app-form-field label="Contraseña actual" [required]="true" [control]="formPass.controls.passwordActual">
-                <input class="input" type="password" formControlName="passwordActual" autocomplete="current-password" />
-            </app-form-field>
-            <app-form-field label="Nueva contraseña" [required]="true" hint="Entre 8 y 72 caracteres"
-                [control]="formPass.controls.passwordNueva">
-                <input class="input" type="password" formControlName="passwordNueva" autocomplete="new-password" />
-            </app-form-field>
-            <app-form-field label="Confirmar nueva contraseña" [required]="true"
-                [control]="formPass.controls.confirmar">
-                <input class="input" type="password" formControlName="confirmar" autocomplete="new-password" />
-            </app-form-field>
-            <app-button type="submit" [loading]="guardandoPass()">Actualizar contraseña</app-button>
-        </form>
+
+        <div class="card">
+            <div class="card__header">
+                <h2>Cambiar contraseña</h2>
+            </div>
+            <form class="card__body" [formGroup]="formPass" (ngSubmit)="cambiarPassword()" novalidate>
+                @if (errorPass()) { <div class="alert alert--error" role="alert">{{ errorPass() }}</div> }
+                <app-form-field label="Contraseña actual">
+                    <input class="input" type="password" formControlName="passwordActual"
+                        autocomplete="current-password" />
+                </app-form-field>
+                <app-form-field label="Nueva contraseña" hint="Entre 8 y 72 caracteres">
+                    <input class="input" type="password" formControlName="passwordNueva" autocomplete="new-password" />
+                </app-form-field>
+                <app-form-field label="Confirmar nueva contraseña">
+                    <input class="input" type="password" formControlName="confirmar" autocomplete="new-password" />
+                </app-form-field>
+                <button appButton type="submit" [loading]="guardandoPass()">Actualizar contraseña</button>
+            </form>
+        </div>
     </div>
-</div>
-}
+    }
+</app-list-state>

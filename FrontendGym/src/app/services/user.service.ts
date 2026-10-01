@@ -1,44 +1,38 @@
-import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { API_BASE_URL, API_PATHS } from '@app/core/constants/api.constants';
-import { toHttpParams } from '@app/core/utils/http-params.util';
-import { Pagina } from '@app/models/page.model';
+import { API_PATHS } from '@app/core/constants/api.constants';
+import { PageQuery, Pagina } from '@app/models/common.model';
 import { Usuario, UsuarioCreateRequest, UsuarioFiltros, UsuarioUpdateRequest } from '@app/models/user.model';
+import { ApiClient } from './api-client.service';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
-  private readonly http = inject(HttpClient);
-  private readonly url = inject(API_BASE_URL) + API_PATHS.usuarios;
+  private readonly api = inject(ApiClient);
+  private readonly path = API_PATHS.usuarios;
 
-  listar(f: UsuarioFiltros = {}): Observable<Pagina<Usuario>> {
-    const params = toHttpParams({
-      q: f.q?.trim(),
-      rolId: f.rolId,
-      estado: f.estado,
-      page: f.page ?? 0,
-      size: f.size ?? 10,
+  listar(f: PageQuery<UsuarioFiltros>): Observable<Pagina<Usuario>> {
+    return this.api.get<Pagina<Usuario>>(this.path, {
+      params: { q: f.q?.trim(), rolId: f.rolId, estado: f.estado, page: f.page, size: f.size },
     });
-    return this.http.get<Pagina<Usuario>>(this.url, { params });
   }
 
   obtener(id: number): Observable<Usuario> {
-    return this.http.get<Usuario>(`${this.url}/${id}`);
+    return this.api.get<Usuario>(`${this.path}/${id}`);
   }
 
   crear(req: UsuarioCreateRequest): Observable<Usuario> {
-    return this.http.post<Usuario>(this.url, req);
+    return this.api.post<Usuario>(this.path, req);
   }
 
   actualizar(id: number, req: UsuarioUpdateRequest): Observable<Usuario> {
-    return this.http.put<Usuario>(`${this.url}/${id}`, req);
+    return this.api.put<Usuario>(`${this.path}/${id}`, req);
   }
 
   activar(id: number): Observable<Usuario> {
-    return this.http.patch<Usuario>(`${this.url}/${id}/activar`, {});
+    return this.api.patch<Usuario>(`${this.path}/${id}/activar`);
   }
 
   desactivar(id: number): Observable<Usuario> {
-    return this.http.patch<Usuario>(`${this.url}/${id}/desactivar`, {});
+    return this.api.patch<Usuario>(`${this.path}/${id}/desactivar`);
   }
 }

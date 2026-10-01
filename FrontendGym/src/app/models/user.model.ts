@@ -1,7 +1,7 @@
 export type Genero = 'MASCULINO' | 'FEMENINO' | 'OTRO' | 'PREFIERO_NO_DECIR';
 export type Estado = 'ACTIVO' | 'INACTIVO';
 
-/** UsuarioResponse del backend. Fechas: LocalDate 'YYYY-MM-DD', LocalDateTime ISO sin zona. */
+/** UsuarioResponse. Fechas: LocalDate 'YYYY-MM-DD'; LocalDateTime ISO sin zona. */
 export interface Usuario {
   id: number;
   nombre: string;
@@ -30,7 +30,7 @@ export interface UsuarioCreateRequest {
 }
 
 export interface UsuarioUpdateRequest extends Omit<UsuarioCreateRequest, 'password'> {
-  password?: string | null; // vacío/null => conserva la actual
+  password?: string | null; 
 }
 
 export interface PerfilUpdateRequest {
@@ -47,6 +47,4 @@ export interface UsuarioFiltros {
   q?: string;
   rolId?: number | null;
   estado?: Estado | '';
-  page?: number;
-  size?: number;
 }

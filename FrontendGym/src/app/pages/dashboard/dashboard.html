@@ -1,45 +1,43 @@
-<div class="page-header">
-    <div>
-        <h1>Hola, {{ auth.sesion()?.nombre }}</h1>
-        <p class="muted">Resumen general del gimnasio.</p>
-    </div>
-</div>
+<app-page-header [title]="'Hola, ' + nombre()" subtitle="Resumen general del gimnasio." />
 
-@if (!esStaff()) {
+@if (!esStaff) {
 <div class="card card__body welcome">
     <h2>Bienvenido al sistema</h2>
-    <p class="muted">Desde aquí podrás gestionar tu información personal. Las demás secciones estarán disponibles
+    <p class="muted">Desde aquí puedes gestionar tu información personal. Las demás secciones estarán disponibles
         próximamente.</p>
-    <a routerLink="/perfil" class="btn btn--primary">Ir a mi perfil</a>
+    <a appButton routerLink="/perfil">Ir a mi perfil</a>
 </div>
-} @else if (loading()) {
-<div class="center"><app-spinner [size]="30" /></div>
-} @else if (resumen(); as r) {
-<div class="grid-stats">
-    <app-stat-card label="Usuarios totales" [value]="r.total" icon="users" tone="blue" />
-    <app-stat-card label="Usuarios activos" [value]="r.activos" icon="user" tone="green" />
-    <app-stat-card label="Usuarios inactivos" [value]="r.inactivos" icon="power" tone="amber" />
-    @if (esAdmin()) {
-    <app-stat-card label="Roles en el sistema" [value]="r.porRol.length" icon="shield" tone="green" />
-    }
-</div>
-
-@if (esAdmin() && r.porRol.length) {
-<div class="card">
-    <div class="card__header">
-        <h2>Usuarios por rol</h2>
-    </div>
-    <div class="card__body bars">
-        @for (rol of r.porRol; track rol.nombre) {
-        <div class="bar-row">
-            <span class="bar-label">{{ rol.nombre }}</span>
-            <div class="bar">
-                <div class="bar__fill" [style.width.%]="(rol.total / maxRol()) * 100"></div>
-            </div>
-            <strong>{{ rol.total }}</strong>
-        </div>
+} @else {
+<app-list-state [loading]="resumen.loading()" [error]="resumen.error()" [empty]="resumen.data() === null"
+    (retry)="resumen.load()">
+    @if (resumen.data(); as r) {
+    <div class="grid-stats">
+        <app-stat-card label="Usuarios totales" [value]="r.total" icon="users" tone="blue" />
+        <app-stat-card label="Usuarios activos" [value]="r.activos" icon="user" tone="green" />
+        <app-stat-card label="Usuarios inactivos" [value]="r.inactivos" icon="power" tone="amber" />
+        @if (esAdmin) {
+        <app-stat-card label="Roles en el sistema" [value]="r.porRol.length" icon="shield" tone="green" />
         }
     </div>
-</div>
-}
+
+    @if (esAdmin && r.porRol.length) {
+    <div class="card">
+        <div class="card__header">
+            <h2>Usuarios por rol</h2>
+        </div>
+        <div class="card__body bars">
+            @for (rol of r.porRol; track rol.nombre) {
+            <div class="bar-row">
+                <span class="bar-label">{{ rol.nombre }}</span>
+                <div class="bar">
+                    <div class="bar__fill" [style.width.%]="(rol.total / maxRol()) * 100"></div>
+                </div>
+                <strong>{{ rol.total }}</strong>
+            </div>
+            }
+        </div>
+    </div>
+    }
+    }
+</app-list-state>
 }

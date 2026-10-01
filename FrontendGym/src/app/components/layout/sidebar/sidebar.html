@@ -1,1 +1,14 @@
-<p>sidebar works!</p>
+<div class="overlay" [class.show]="open()" (click)="closeRequested.emit()"></div>
+<aside class="sidebar" [class.open]="open()">
+    <div class="brand">
+        <span class="logo">G</span>
+        <div><strong>Gimnasio</strong><small>CIBERTEC</small></div>
+    </div>
+    <nav aria-label="Principal">
+        @for (item of items(); track item.route) {
+        <a [routerLink]="item.route" routerLinkActive="active" (click)="closeRequested.emit()">
+            <app-icon [name]="item.icon" /> {{ item.label }}
+        </a>
+        }
+    </nav>
+</aside>

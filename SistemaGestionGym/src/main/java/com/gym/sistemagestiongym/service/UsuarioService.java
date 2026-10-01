@@ -67,8 +67,7 @@ public class UsuarioService {
         usuario.setPassword(passwordEncoder.encode(request.password()));
         usuario.setRol(rol);
 
-        // saveAndFlush: fuerza el INSERT y la relectura de fecha_registro antes de armar la respuesta
-        return UsuarioResponse.from(usuarioRepository.saveAndFlush(usuario));
+        return UsuarioResponse.from(usuarioRepository.save(usuario));
     }
 
     @Transactional
@@ -85,7 +84,7 @@ public class UsuarioService {
                 request.genero(), request.fechaNacimiento());
         usuario.setEmail(email);
 
-        return UsuarioResponse.from(usuarioRepository.saveAndFlush(usuario));
+        return UsuarioResponse.from(usuarioRepository.save(usuario));
     }
 
     @Transactional
@@ -132,10 +131,11 @@ public class UsuarioService {
     private UsuarioResponse aplicarEstado(Usuario usuario, Estado nuevoEstado) {
         if (usuario.getEstado() != nuevoEstado) {
             usuario.setEstado(nuevoEstado);
-            usuarioRepository.saveAndFlush(usuario);
+            usuarioRepository.save(usuario);
         }
         return UsuarioResponse.from(usuario);
     }
+
     /** null o en blanco => se conserva la actual. Se cifra con el mismo PasswordEncoder del login. */
     private void aplicarCambioDePassword(Usuario usuario, String nuevaPassword, boolean cuentaPropia) {
         if (nuevaPassword == null || nuevaPassword.isBlank()) return;
@@ -144,7 +144,7 @@ public class UsuarioService {
             throw new ConflictoEstadoException(
                     "Para cambiar tu propia contraseña usa tu perfil");
         }
-        usuario.setPassword(passwordEncoder.encode(nuevaPassword));   // dirty checking + saveAndFlush
+        usuario.setPassword(passwordEncoder.encode(nuevaPassword));
     }
 
     /** null/vacío => sin filtro de texto. Si no, minúsculas, comodines y caracteres especiales escapados. */

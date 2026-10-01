@@ -1,9 +1,5 @@
-<div class="page-header">
-    <div>
-        <h1>Roles</h1>
-        <p class="muted">Los roles definen los permisos de acceso. El nombre se guarda en mayúsculas.</p>
-    </div>
-</div>
+<app-page-header title="Roles"
+    subtitle="Los roles definen los permisos de acceso. El nombre se guarda en mayúsculas." />
 
 <div class="grid-2">
     <div class="card">
@@ -11,11 +7,12 @@
             <h2>Nuevo rol</h2>
         </div>
         <form class="card__body" [formGroup]="form" (ngSubmit)="crear()" novalidate>
-            <app-form-field label="Nombre del rol" [required]="true" [control]="form.controls.nombre">
-                <input class="input" formControlName="nombre" placeholder="Ej. NUTRICIONISTA" />
+            <app-form-field label="Nombre del rol">
+                <input class="input" formControlName="nombre" placeholder="Ej. NUTRICIONISTA" autocomplete="off" />
             </app-form-field>
-            <app-button type="submit" [loading]="guardando()"><app-icon name="plus" [size]="16" /> Crear
-                rol</app-button>
+            <button appButton type="submit" [loading]="guardando()">
+                <app-icon name="plus" [size]="16" /> Crear rol
+            </button>
         </form>
     </div>
 
@@ -23,35 +20,34 @@
         <div class="card__header">
             <h2>Roles registrados</h2>
         </div>
-        @if (loading()) {
-        <div class="center"><app-spinner [size]="28" /></div>
-        } @else if (roles().length === 0) {
-        <div class="empty">No hay roles registrados.</div>
-        } @else {
-        <div class="table-wrap">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @for (r of roles(); track r.id) {
-                    <tr>
-                        <td>{{ r.id }}</td>
-                        <td><strong>{{ r.nombre }}</strong></td>
-                        <td class="actions">
-                            <button class="btn btn--ghost btn--icon" title="Eliminar"
-                                (click)="porEliminar.set(r)"><app-icon name="trash" /></button>
-                        </td>
-                    </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-        }
+        <app-list-state [loading]="lista.loading()" [error]="lista.error()" [empty]="(lista.data()?.length ?? 0) === 0"
+            emptyText="No hay roles registrados." (retry)="lista.load()">
+            <div class="table-wrap">
+                <table class="table table--stack">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (r of lista.data(); track r.id) {
+                        <tr>
+                            <td data-label="ID">{{ r.id }}</td>
+                            <td data-label="Nombre"><strong>{{ r.nombre }}</strong></td>
+                            <td class="actions">
+                                <button appButton="ghost" size="icon" type="button" title="Eliminar"
+                                    aria-label="Eliminar rol" (click)="porEliminar.set(r)">
+                                    <app-icon name="trash" />
+                                </button>
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </app-list-state>
     </div>
 </div>
 

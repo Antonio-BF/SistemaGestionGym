@@ -1,1 +1,6 @@
-<p>main-layout works!</p>
+<app-sidebar [open]="menuOpen()" (closeRequested)="menuOpen.set(false)" />
+<div class="main">
+    <app-header (menuToggle)="menuOpen.set(!menuOpen())" />
+    <main class="content"><router-outlet /></main>
+    <app-footer />
+</div>

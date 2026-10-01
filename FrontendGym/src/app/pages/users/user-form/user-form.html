@@ -1,39 +1,37 @@
 <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
-    <app-modal [title]="esEdicion() ? 'Editar usuario' : 'Nuevo usuario'" size="lg" (closed)="closed.emit()">
+    <app-modal [title]="esEdicion() ? 'Editar usuario' : 'Nuevo usuario'" size="lg" (closed)="cerrar()">
         @if (error()) { <div class="alert alert--error" role="alert">{{ error() }}</div> }
 
         <div class="form-grid">
-            <app-form-field label="Nombre" [required]="true" [control]="form.controls.nombre">
-                <input class="input" formControlName="nombre" />
+            <app-form-field label="Nombre">
+                <input class="input" formControlName="nombre" autocomplete="off" />
             </app-form-field>
-            <app-form-field label="Apellido" [required]="true" [control]="form.controls.apellido">
-                <input class="input" formControlName="apellido" />
+            <app-form-field label="Apellido">
+                <input class="input" formControlName="apellido" autocomplete="off" />
             </app-form-field>
 
-            <app-form-field label="Email" [required]="true" [control]="form.controls.email">
-                <input class="input" type="email" formControlName="email" />
+            <app-form-field label="Email">
+                <input class="input" type="email" formControlName="email" autocomplete="off" />
             </app-form-field>
-            <app-form-field [label]="esEdicion() ? 'Nueva contraseña' : 'Contraseña'" [required]="!esEdicion()"
-                [hint]="esEdicion() ? 'Déjala en blanco para conservar la actual' : 'Entre 8 y 72 caracteres'"
-                [control]="form.controls.password"
-                mensajePatron="Debe tener entre 8 y 72 caracteres, o dejarse en blanco">
+            <app-form-field [label]="esEdicion() ? 'Nueva contraseña' : 'Contraseña'" [hint]="cuentaPropia() ? 'Para cambiar tu contraseña usa tu perfil'
+                    : esEdicion() ? 'Déjala en blanco para conservar la actual' : 'Entre 8 y 72 caracteres'"
+                [patternMessage]="msgPassword">
                 <input class="input" type="password" formControlName="password" autocomplete="new-password" />
             </app-form-field>
 
-            <app-form-field label="Teléfono" [control]="form.controls.telefono"
-                mensajePatron="Debe tener entre 7 y 15 dígitos">
+            <app-form-field label="Teléfono" [patternMessage]="msgTelefono">
                 <input class="input" formControlName="telefono" inputmode="tel" />
             </app-form-field>
-            <app-form-field label="Fecha de nacimiento" [control]="form.controls.fechaNacimiento">
+            <app-form-field label="Fecha de nacimiento">
                 <input class="input" type="date" formControlName="fechaNacimiento" />
             </app-form-field>
 
-            <app-form-field label="Género" [control]="form.controls.genero">
+            <app-form-field label="Género">
                 <select class="select" formControlName="genero">
                     @for (g of generos; track g.value) { <option [value]="g.value">{{ g.label }}</option> }
                 </select>
             </app-form-field>
-            <app-form-field label="Rol" [required]="true" [control]="form.controls.rolId">
+            <app-form-field label="Rol" [hint]="cuentaPropia() ? 'No puedes cambiar tu propio rol' : ''">
                 <select class="select" formControlName="rolId">
                     <option [ngValue]="null" disabled>Seleccione un rol</option>
                     @for (r of roles(); track r.id) { <option [ngValue]="r.id">{{ r.nombre }}</option> }
@@ -42,9 +40,10 @@
         </div>
 
         <div modal-footer>
-            <app-button variant="secondary" (click)="closed.emit()">Cancelar</app-button>
-            <app-button type="submit" [loading]="guardando()">{{ esEdicion() ? 'Guardar cambios' : 'Crear usuario'
-                }}</app-button>
+            <button appButton="secondary" type="button" [disabled]="guardando()" (click)="cerrar()">Cancelar</button>
+            <button appButton type="submit" [loading]="guardando()">
+                {{ esEdicion() ? 'Guardar cambios' : 'Crear usuario' }}
+            </button>
         </div>
     </app-modal>
 </form>

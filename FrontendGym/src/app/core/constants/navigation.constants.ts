@@ -1,6 +1,5 @@
-import { IconName } from '@app/components/shared/icons/icons';
-import { ROLES } from './app.constants';
-
+import type { IconName } from '@app/components/shared/icon';
+import { PERMISOS } from './app.constants';
 
 export interface NavItem {
   label: string;
@@ -9,10 +8,10 @@ export interface NavItem {
   roles?: readonly string[]; // sin roles => visible para todos
 }
 
-/** Para sumar módulos (membresías, POS, reservas...) basta con agregar un ítem. */
-export const NAV_ITEMS: NavItem[] = [
+/** Para sumar un módulo (membresías, POS, reservas…) basta con agregar un ítem aquí. */
+export const NAV_ITEMS: readonly NavItem[] = [
   { label: 'Dashboard', route: '/dashboard', icon: 'grid' },
-  { label: 'Usuarios', route: '/usuarios', icon: 'users', roles: [ROLES.ADMIN, ROLES.RECEPCION] },
-  { label: 'Roles', route: '/roles', icon: 'shield', roles: [ROLES.ADMIN] },
+  { label: 'Usuarios', route: '/usuarios', icon: 'users', roles: PERMISOS.usuarios.ver },
+  { label: 'Roles', route: '/roles', icon: 'shield', roles: PERMISOS.roles.gestionar },
   { label: 'Mi perfil', route: '/perfil', icon: 'user' },
 ];

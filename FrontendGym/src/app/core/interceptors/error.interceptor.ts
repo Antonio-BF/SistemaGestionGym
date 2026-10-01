@@ -1,33 +1,25 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
-import { API_BASE_URL, API_PATHS } from '@app/core/constants/api.constants';
-import { AuthService } from '@app/services/auth.service';
-import { ToastService } from '@app/services/toast.service';
+import { PUBLIC_REQUEST } from '@app/core/constants/api.constants';
+import { ApiError } from '@app/models/error.model';
+import { SessionService } from '@app/services/session.service';
 
 /**
- * 401 fuera de /auth => sesión inválida: cierra sesión.
- * Sin conexión (0) o 5xx => aviso global. 400/403/404/409 los maneja cada pantalla.
+ * Punto único de traducción HttpErrorResponse -> ApiError.
+ * Solo gestiona la sesión: la presentación del error (toast, inline, campo) es de cada pantalla.
  */
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
-    const base = inject(API_BASE_URL);
-    const auth = inject(AuthService);
-    const toast = inject(ToastService);
-    const esAuth = req.url === base + API_PATHS.login || req.url === base + API_PATHS.register;
+    const session = inject(SessionService);
+    const esPublica = req.context.get(PUBLIC_REQUEST);
 
     return next(req).pipe(
-        catchError((err: unknown) => {
-            if (err instanceof HttpErrorResponse) {
-                if (err.status === 401 && !esAuth) {
-                    auth.logout();
-                    toast.info('Tu sesión expiró. Inicia sesión nuevamente.');
-                } else if (err.status === 0) {
-                    toast.error('No se pudo conectar con el servidor');
-                } else if (err.status >= 500) {
-                    toast.error('Error interno del servidor. Inténtalo nuevamente');
-                }
-            }
-            return throwError(() => err);
+        catchError((e: unknown) => {
+            if (!(e instanceof HttpErrorResponse)) return throwError(() => e);
+            const error = ApiError.fromHttp(e);
+            // isAuthenticated() evita repetir logout/toast cuando varias peticiones fallan a la vez
+            if (error.kind === 'unauthorized' && !esPublica && session.isAuthenticated()) session.expire();
+            return throwError(() => error);
         }),
     );
 };

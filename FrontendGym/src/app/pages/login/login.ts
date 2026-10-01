@@ -1,11 +1,13 @@
 import { Component, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { environment } from '@env/environment';
 import { finalize } from 'rxjs';
-import { parseApiError } from '@app/core/utils/http-error.util';
+import { AppButton } from '@app/components/shared/button.directive';
+import { FormField } from '@app/components/shared/form-field';
+import { applyApiErrors } from '@app/core/utils/form.util';
+import { ApiError } from '@app/models/error.model';
 import { AuthService } from '@app/services/auth.service';
-import { AppButton } from '@app/components/shared/buttons/button/button';
-import { FormField } from '@app/components/shared/inputs/form-field/form-field';
 
 @Component({
   selector: 'app-login',
@@ -21,6 +23,7 @@ export class Login {
 
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
+  protected readonly esDev = !environment.production;
 
   protected readonly form = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -28,6 +31,7 @@ export class Login {
   });
 
   protected enviar(): void {
+    if (this.loading()) return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -38,8 +42,15 @@ export class Login {
       .login(this.form.getRawValue())
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
-        next: () => this.router.navigateByUrl(this.route.snapshot.queryParamMap.get('returnUrl') ?? '/dashboard'),
-        error: (e) => this.error.set(parseApiError(e, 'No se pudo iniciar sesión').message),
+        next: () => void this.router.navigateByUrl(this.destino()),
+        // 401 "Email o contraseña incorrectos" / 403 cuenta inactiva / 400 con campos
+        error: (e: unknown) => this.error.set(applyApiErrors(this.form, ApiError.from(e))),
       });
+  }
+
+  /** Solo rutas internas: evita redirecciones a valores arbitrarios del query string. */
+  private destino(): string {
+    const url = this.route.snapshot.queryParamMap.get('returnUrl');
+    return url?.startsWith('/') && !url.startsWith('//') ? url : '/dashboard';
   }
 }

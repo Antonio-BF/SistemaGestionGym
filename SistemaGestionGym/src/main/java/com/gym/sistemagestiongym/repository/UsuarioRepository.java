@@ -33,6 +33,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
                    OR LOWER(u.apellido) LIKE :q ESCAPE '!'
                    OR LOWER(u.email) LIKE :q ESCAPE '!'
                    OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE :q ESCAPE '!')
+            ORDER BY u.estado ASC, u.nombre ASC, u.apellido ASC
             """)
     Page<Usuario> buscar(@Param("q") String q,
                          @Param("rolId") Integer rolId,

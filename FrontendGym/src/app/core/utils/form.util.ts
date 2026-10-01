@@ -1,31 +1,45 @@
 import { AbstractControl, FormGroup } from '@angular/forms';
+import { ApiError } from '@app/models/error.model';
 
-/** Mensaje de error de un control (solo si fue tocado/modificado). */
-export function mensajeError(c: AbstractControl | null, mensajePatron?: string): string | null {
-  if (!c || !c.errors || !(c.touched || c.dirty)) return null;
-  const e = c.errors;
-  if (e['server']) return String(e['server']);
-  if (e['required']) return 'Este campo es obligatorio';
-  if (e['email']) return 'Ingrese un email válido';
-  if (e['minlength']) return `Mínimo ${e['minlength'].requiredLength} caracteres`;
-  if (e['maxlength']) return `Máximo ${e['maxlength'].requiredLength} caracteres`;
-  if (e['pattern']) return mensajePatron ?? 'El formato no es válido';
-  if (e['fechaFutura']) return 'La fecha de nacimiento debe ser pasada';
-  if (e['noCoincide']) return 'Las contraseñas no coinciden';
+/** Mensaje de un control (solo si fue tocado o modificado). */
+export function mensajeError(control: AbstractControl | null, mensajePatron?: string): string | null {
+  const errors = control?.errors;
+  if (!control || !errors || !(control.touched || control.dirty)) return null;
+  if (errors['server']) return String(errors['server']);
+  if (errors['required']) return 'Este campo es obligatorio';
+  if (errors['email']) return 'Ingrese un email válido';
+  if (errors['minlength']) return `Mínimo ${errors['minlength'].requiredLength} caracteres`;
+  if (errors['maxlength']) return `Máximo ${errors['maxlength'].requiredLength} caracteres`;
+  if (errors['pattern']) return mensajePatron ?? 'El formato no es válido';
+  if (errors['fechaFutura']) return 'La fecha de nacimiento debe ser pasada';
+  if (errors['noCoincide']) return 'Las contraseñas no coinciden';
   return 'Valor inválido';
 }
 
-/** Vuelca validationErrors del backend en los controles con el mismo nombre. */
-export function applyServerErrors(form: FormGroup, errores: Record<string, string> | null): boolean {
-  if (!errores) return false;
-  let aplicado = false;
-  for (const [campo, mensaje] of Object.entries(errores)) {
+/**
+ * Vuelca los fieldErrors del backend en los controles homónimos (los nombres coinciden con los DTO).
+ * Devuelve el mensaje general que quedó sin ubicar, o null si todo se pintó en campos.
+ * `fallbackControl`: para 400/409 de negocio sin campo (p. ej. "El nombre ya esta registrado").
+ * Los errores de servidor se limpian solos cuando el usuario edita el campo.
+ */
+export function applyApiErrors(form: FormGroup, err: ApiError, fallbackControl?: string): string | null {
+  let sinUbicar = false;
+  for (const [campo, mensaje] of Object.entries(err.fieldErrors)) {
     const control = form.get(campo);
     if (control) {
       control.setErrors({ server: mensaje });
       control.markAsTouched();
-      aplicado = true;
+    } else {
+      sinUbicar = true;
     }
   }
-  return aplicado;
+  if (err.hasFieldErrors && !sinUbicar) return null;
+
+  const destino = fallbackControl ? form.get(fallbackControl) : null;
+  if (destino && (err.kind === 'conflict' || err.kind === 'bad-request')) {
+    destino.setErrors({ server: err.message });
+    destino.markAsTouched();
+    return null;
+  }
+  return err.message;
 }

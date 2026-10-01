@@ -33,7 +33,7 @@ public class PerfilService {
         Usuario usuario = obtenerAutenticado(emailAutenticado);
         usuario.actualizarDatosBasicos(request.nombre(), request.apellido(), request.telefono(),
                 request.genero(), request.fechaNacimiento());
-        return UsuarioResponse.from(usuarioRepository.saveAndFlush(usuario));
+        return UsuarioResponse.from(usuarioRepository.save(usuario));
     }
 
     @Transactional

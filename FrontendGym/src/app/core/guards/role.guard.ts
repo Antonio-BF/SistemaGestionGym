@@ -1,8 +1,10 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
-import { AuthService } from '@app/services/auth.service';
+import { CanMatchFn, Router } from '@angular/router';
+import { SessionService } from '@app/services/session.service';
 
-export const roleGuard: CanActivateFn = (route) => {
-  const roles = (route.data['roles'] as string[] | undefined) ?? [];
-  return inject(AuthService).hasAnyRole(roles) || inject(Router).createUrlTree(['/dashboard']);
-};
+/**
+ * canMatch: si el rol no alcanza, ni siquiera se descarga el chunk lazy.
+ * Uso: { path: 'roles', canMatch: [requireRoles(PERMISOS.roles.gestionar)], ... }
+ */
+export const requireRoles = (roles: readonly string[]): CanMatchFn => () =>
+  inject(SessionService).hasAnyRole(roles) || inject(Router).createUrlTree(['/dashboard']);

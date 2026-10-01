@@ -1,1 +1,19 @@
-<p>header works!</p>
+<header class="header">
+    <button appButton="ghost" size="icon" type="button" class="menu" aria-label="Abrir menú"
+        (click)="menuToggle.emit()">
+        <app-icon name="menu" [size]="22" />
+    </button>
+    <span class="spacer"></span>
+    @if (session.user(); as u) {
+    <div class="user">
+        <app-avatar [nombre]="u.nombre" [apellido]="u.apellido" />
+        <div class="info">
+            <strong>{{ u.nombre }} {{ u.apellido }}</strong>
+            <app-badge tone="blue">{{ u.rol }}</app-badge>
+        </div>
+    </div>
+    }
+    <button appButton="secondary" size="sm" type="button" (click)="auth.logout()">
+        <app-icon name="logout" [size]="16" /> Salir
+    </button>
+</header>

@@ -1,10 +1,9 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { AuthService } from '@app/services/auth.service';
+import { SessionService } from '@app/services/session.service';
 
-export const authGuard: CanActivateFn = (_route, state) => {
-  const auth = inject(AuthService);
-  return auth.isAuthenticated()
+/** Úsalo en canActivate y canActivateChild: revalida en cada navegación interna. */
+export const authGuard: CanActivateFn = (_route, state) =>
+  inject(SessionService).isAuthenticated()
     ? true
     : inject(Router).createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
-};
