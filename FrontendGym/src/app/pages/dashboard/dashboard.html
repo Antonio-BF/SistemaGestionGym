@@ -1,307 +1,107 @@
+<app-page-header [title]="'Hola, ' + nombre()" subtitle="Resumen general del gimnasio." />
 
-<div class="page-header">
-  <div>
-    <h1>Hola, {{ auth.sesion()?.nombre }}</h1>
-    <p class="muted">Resumen general del gimnasio.</p>
-    <span class="dashboard-date">
-      {{ hoy | date:"EEEE, d 'de' MMMM 'de' y":"":"es-PE" }}
-    </span>
-  </div>
+@if (!esStaff) {
+<div class="card card__body welcome">
+  <h2>Bienvenido al sistema</h2>
+  <p class="muted">Desde aquí puedes gestionar tu información personal. Las demás secciones estarán disponibles próximamente.</p>
+  <a appButton routerLink="/perfil">Ir a mi perfil</a>
 </div>
+} @else {
+<app-list-state [loading]="dashboard.loading()" [error]="dashboard.error()" [empty]="dashboard.data() === null" (retry)="dashboard.load()">
+  @if (dashboard.data(); as d) {
+  <section class="dashboard-section">
+    <div class="grid-stats">
+      <app-stat-card label="Usuarios totales" [value]="d.resumen.total" icon="users" tone="blue" />
+      <app-stat-card label="Usuarios activos" [value]="d.resumen.activos" icon="user" tone="green" />
+      <app-stat-card label="Usuarios inactivos" [value]="d.resumen.inactivos" icon="power" tone="amber" />
+      <app-stat-card label="Nuevos este mes" [value]="d.resumen.nuevosEsteMes" icon="plus" tone="green" />
+      @if (esAdmin) {
+      <app-stat-card label="Roles en el sistema" [value]="d.resumen.porRol.length" icon="shield" tone="green" />
+      }
+    </div>
+  </section>
 
-@if (!esStaff()) {
-  <div class="card card__body welcome">
-    <div class="welcome__icon">👋</div>
-    <h2>Bienvenido al sistema</h2>
-    <p class="muted">
-      Desde aquí podrás gestionar tu información personal.
-      Las demás secciones estarán disponibles próximamente.
-    </p>
-    <a routerLink="/perfil" class="btn btn--primary">
-      Ir a mi perfil
-    </a>
-  </div>
-} @else if (loading()) {
-  <div class="center">
-    <app-spinner [size]="30" />
-  </div>
-} @else if (resumen(); as r) {
+  <section class="dashboard-section">
+    <div class="card">
+      <div class="card__header">
+        <div>
+          <h2>Registro de usuarios</h2>
+          <p class="muted">Nuevos usuarios registrados durante los últimos seis meses.</p>
+        </div>
+      </div>
+      <div class="card__body monthly-chart">
+        @for (mes of d.resumenMensual; track mes.clave) {
+        <div class="month-column">
+          <div class="month-value">{{ mes.total }}</div>
+          <div class="month-bar">
+            <div class="month-bar__fill" [style.height.%]="(mes.total / maxMensual()) * 100"></div>
+          </div>
+          <span class="month-label">{{ mes.etiqueta }}</span>
+        </div>
+        }
+      </div>
+    </div>
+  </section>
 
-  <!-- ESTADÍSTICAS -->
-  <section class="grid-stats">
-    <app-stat-card
-      label="Usuarios totales"
-      [value]="r.total"
-      icon="users"
-      tone="blue"
-    />
+  <section class="dashboard-section dashboard-grid">
+    <div class="card">
+      <div class="card__header">
+        <h2>Usuarios recientes</h2>
+        <a appButton="ghost" size="sm" routerLink="/usuarios">Ver usuarios</a>
+      </div>
+      <div class="card__body recent-users">
+        @if (d.recientes.length) {
+        @for (usuario of d.recientes; track usuario.id) {
+        <div class="user-row">
+          <app-avatar [nombre]="usuario.nombre" [apellido]="usuario.apellido" />
+          <div class="user-info">
+            <strong>{{ usuario.nombre }} {{ usuario.apellido }}</strong>
+            <span class="muted">{{ usuario.email }}</span>
+          </div>
+          <app-badge [tone]="estadoTone[usuario.estado]">{{ usuario.estado === 'ACTIVO' ? 'Activo' : 'Inactivo' }}</app-badge>
+        </div>
+        }
+        } @else {
+        <p class="muted">No hay usuarios registrados.</p>
+        }
+      </div>
+    </div>
 
-    <app-stat-card
-      label="Usuarios activos"
-      [value]="r.activos"
-      icon="user"
-      tone="green"
-    />
-
-    <app-stat-card
-      label="Usuarios inactivos"
-      [value]="r.inactivos"
-      icon="power"
-      tone="amber"
-    />
-
-    <app-stat-card
-      label="Nuevos este mes"
-      [value]="nuevosEsteMes()"
-      icon="users"
-      tone="blue"
-    />
-
-    @if (esAdmin()) {
-      <app-stat-card
-        label="Roles en el sistema"
-        [value]="r.porRol.length"
-        icon="shield"
-        tone="green"
-      />
+    @if (esAdmin && d.resumen.porRol.length) {
+    <div class="card">
+      <div class="card__header">
+        <h2>Usuarios por rol</h2>
+      </div>
+      <div class="card__body bars">
+        @for (rol of d.resumen.porRol; track rol.nombre) {
+        <div class="bar-row">
+          <span class="bar-label">{{ rol.nombre }}</span>
+          <div class="bar" aria-hidden="true">
+            <div class="bar__fill" [style.width.%]="(rol.total / maxRol()) * 100"></div>
+          </div>
+          <strong>{{ rol.total }}</strong>
+        </div>
+        }
+      </div>
+    </div>
     }
   </section>
 
-  
-<!-- COMPARACIÓN MENSUAL -->
-<section class="card monthly-comparison-card">
-  <div class="card__header">
-    <div>
-      <h2>Comparación mensual</h2>
-      <p class="muted">
-        Nuevos usuarios frente al mes anterior.
-      </p>
-    </div>
-  </div>
-
-  <div class="card__body monthly-comparison">
-    <div class="comparison-item">
-      <span class="comparison-label">Mes actual</span>
-      <strong class="comparison-value">
-        {{ nuevosEsteMes() }}
-      </strong>
-    </div>
-
-    <div class="comparison-item">
-      <span class="comparison-label">Mes anterior</span>
-      <strong class="comparison-value">
-        {{ nuevosMesAnterior() }}
-      </strong>
-    </div>
-
-    <div class="comparison-item comparison-result">
-      <span class="comparison-label">Variación</span>
-
-      @if (variacionMensual(); as variacion) {
-        @if (variacion > 0) {
-          <strong class="positive">
-            ↑ {{ variacion }}%
-          </strong>
-        } @else if (variacion < 0) {
-          <strong class="negative">
-            ↓ {{ Math.abs(variacion) }}%
-          </strong>
-        } @else {
-          <strong>Sin variación</strong>
-        }
-      } @else {
-        <strong>
-          @if (variacionMensual() === 0) {
-            Sin variación
-          } @else {
-            Sin datos anteriores
-          }
-        </strong>
-      }
-    </div>
-  </div>
-</section>
-
-  <!-- GRÁFICO DE REGISTROS -->
-  <section class="card">
-    <div class="card__header">
-      <div>
-        <h2>Registros de usuarios</h2>
-        <p class="muted">
-          Nuevos registros durante los últimos seis meses.
-        </p>
-      </div>
-    </div>
-
-    <div class="card__body monthly-chart">
-      @for (mes of registrosMensuales(); track $index) {
-        <div class="month-column">
-          <strong class="month-total">
-            {{ mes.total }}
-          </strong>
-
-          <div class="month-bar-container">
-            <div
-              class="month-bar"
-              [style.height.%]="mes.porcentaje"
-              [class.month-bar--empty]="mes.total === 0"
-              [attr.title]="mes.total + ' registros'"
-            ></div>
-          </div>
-
-          <span class="month-label">
-            {{ mes.etiqueta }}
-          </span>
-        </div>
-      }
-    </div>
-
-    <p class="chart-note muted">
-      Cifras calculadas con los usuarios recibidos por el servicio.
-    </p>
-  </section>
-
-  <!-- USUARIOS RECIENTES -->
-  <section class="card">
-    <div class="card__header">
-      <div>
-        <h2>Usuarios recientes</h2>
-        <p class="muted">
-          Los últimos usuarios registrados.
-        </p>
-      </div>
-
-      <a routerLink="/usuarios" class="btn btn--secondary">
-        Ver usuarios
-      </a>
-    </div>
-
-    <div class="card__body recent-users">
-      @if (loadingUsuarios()) {
-        <div class="center">
-          <app-spinner [size]="24" />
-        </div>
-      } @else if (usuariosRecientes().length === 0) {
-        <div class="empty-state">
-          <span class="empty-state__icon">👥</span>
-          <p class="muted">No hay usuarios registrados.</p>
-        </div>
-      } @else {
-        @for (usuario of usuariosRecientes(); track usuario.id) {
-          <div class="recent-user">
-            <div class="recent-user__avatar">
-              {{ usuario.nombre.charAt(0) }}{{ usuario.apellido.charAt(0) }}
-            </div>
-
-            <div class="recent-user__info">
-              <strong>
-                {{ usuario.nombre }} {{ usuario.apellido }}
-              </strong>
-              <span>{{ usuario.email }}</span>
-
-              <span
-                class="user-status"
-                [class.user-status--inactive]="usuario.estado === 'INACTIVO'"
-              >
-                {{ usuario.estado }}
-              </span>
-            </div>
-
-            <div class="recent-user__details">
-              <span class="recent-user__role">
-                {{ usuario.rol }}
-              </span>
-
-              <span class="muted">
-                {{ usuario.fechaRegistro | date:'dd/MM/yyyy' }}
-              </span>
-            </div>
-          </div>
-        }
-      }
-    </div>
-  </section>
-
-  <!-- USUARIOS POR ROL -->
-  @if (esAdmin() && r.porRol.length > 0) {
-    <section class="card">
-      <div class="card__header">
-        <div>
-          <h2>Usuarios por rol</h2>
-          <p class="muted">
-            Distribución de usuarios registrados en el sistema.
-          </p>
-        </div>
-      </div>
-
-      <div class="card__body bars">
-        @for (rol of r.porRol; track rol.nombre) {
-          <div class="bar-row">
-            <span class="bar-label">
-              {{ rol.nombre }}
-            </span>
-
-            <div class="bar">
-              <div
-                class="bar__fill"
-                [style.width.%]="(rol.total / maxRol()) * 100"
-              ></div>
-            </div>
-
-            <strong>{{ rol.total }}</strong>
-
-            <span class="role-percent">
-              {{ r.total ? ((rol.total / r.total) * 100 | number:'1.0-0') : 0 }}%
-            </span>
-          </div>
-        }
-      </div>
-    </section>
-  }
-
-  <!-- ACCIONES RÁPIDAS -->
-  <section class="card quick-actions-card">
-    <div class="card__header">
+  <section class="dashboard-section quick-actions">
+    <div class="card card__body">
       <div>
         <h2>Acciones rápidas</h2>
-        <p class="muted">
-          Accede rápidamente a las funciones principales.
-        </p>
+        <p class="muted">Accede directamente a las funciones disponibles para tu rol.</p>
+      </div>
+      <div class="actions">
+        <a appButton routerLink="/usuarios">Gestionar usuarios</a>
+        @if (esAdmin) {
+        <a appButton="secondary" routerLink="/roles">Gestionar roles</a>
+        }
+        <a appButton="ghost" routerLink="/perfil">Mi perfil</a>
       </div>
     </div>
-
-    <div class="quick-actions">
-      <a routerLink="/usuarios" class="quick-action">
-        <div class="quick-action__icon quick-action__icon--blue">
-          👥
-        </div>
-        <div>
-          <strong>Usuarios</strong>
-          <span>Gestionar usuarios</span>
-        </div>
-      </a>
-
-      @if (esAdmin()) {
-        <a routerLink="/roles" class="quick-action">
-          <div class="quick-action__icon quick-action__icon--green">
-            🛡️
-          </div>
-          <div>
-            <strong>Roles</strong>
-            <span>Administrar roles</span>
-          </div>
-        </a>
-      }
-
-      <a routerLink="/perfil" class="quick-action">
-        <div class="quick-action__icon quick-action__icon--amber">
-          👤
-        </div>
-        <div>
-          <strong>Mi perfil</strong>
-          <span>Ver mi información</span>
-        </div>
-      </a>
-    </div>
   </section>
+  }
+</app-list-state>
 }
